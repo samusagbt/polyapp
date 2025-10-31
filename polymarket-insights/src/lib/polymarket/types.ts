@@ -84,6 +84,10 @@ export interface MarketHighlight {
 export interface DashboardInsights {
   fetchedAt: Date;
   totalMarkets: number;
+  totalFetched: number;
+  accessibleMarketCount: number;
+  restrictedMarketCount: number;
+  usedRestrictedFallback: boolean;
   positiveMarketShare: number;
   averageYesProbability: number;
   totalVolume24h: number;

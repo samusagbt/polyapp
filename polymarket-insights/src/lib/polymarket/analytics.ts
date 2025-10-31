@@ -61,12 +61,12 @@ function toMarket(raw: RawPolymarketMarket): PolymarketMarket {
   const prices = raw.outcomePrices ?? [];
   const { yesOutcome, yesProbability } = pickYesOutcome(outcomes, prices);
   const eventRestricted = Array.isArray(raw.events)
-    ? raw.events.some((event) => Boolean(event?.restricted))
+    ? raw.events.every((event) => Boolean(event?.restricted))
     : false;
   const primaryAvailableEvent = Array.isArray(raw.events)
-    ? raw.events.find((event) => !event?.restricted)
+    ? raw.events.find((event) => !event?.restricted) ?? raw.events[0]
     : undefined;
-  const primaryEvent = primaryAvailableEvent ?? raw.events?.[0] ?? null;
+  const primaryEvent = primaryAvailableEvent ?? null;
   const eventSlug = primaryEvent?.slug ?? undefined;
   const category = raw.category ?? primaryEvent?.category ?? "Uncategorized";
   const restricted = Boolean(raw.restricted) || eventRestricted;
@@ -209,18 +209,23 @@ function buildEncouragingSignals(markets: PolymarketMarket[]): string[] {
 }
 
 export function buildDashboardInsights(rawMarkets: RawPolymarketMarket[]): DashboardInsights {
-  const markets = rawMarkets
+  const normalizedMarkets = rawMarkets
     .map(toMarket)
-    .filter((market) => market.outcomes.length >= 1 && !market.restricted);
+    .filter((market) => market.outcomes.length >= 1);
 
-  const totalMarkets = markets.length;
-  const positiveMarkets = markets.filter((market) => market.yesProbability >= 0.5);
+  const accessibleMarkets = normalizedMarkets.filter((market) => !market.restricted);
+  const dataset = accessibleMarkets.length > 0 ? accessibleMarkets : normalizedMarkets;
+  const totalMarkets = dataset.length;
+  const totalFetched = normalizedMarkets.length;
+  const accessibleMarketCount = accessibleMarkets.length;
+  const restrictedMarketCount = totalFetched - accessibleMarketCount;
+  const positiveMarkets = dataset.filter((market) => market.yesProbability >= 0.5);
   const averageYesProbability =
-    markets.reduce((sum, market) => sum + market.yesProbability, 0) /
+    dataset.reduce((sum, market) => sum + market.yesProbability, 0) /
     (totalMarkets || 1);
 
-  const totalVolume24h = markets.reduce((sum, market) => sum + market.volume24h, 0);
-  const medianLiquidity = computeMedian(markets.map((market) => market.liquidity));
+  const totalVolume24h = dataset.reduce((sum, market) => sum + market.volume24h, 0);
+  const medianLiquidity = computeMedian(dataset.map((market) => market.liquidity));
 
   const highConfidence = positiveMarkets
     .filter((market) => market.yesProbability >= 0.65)
@@ -228,19 +233,19 @@ export function buildDashboardInsights(rawMarkets: RawPolymarketMarket[]): Dashb
     .slice(0, 6)
     .map((market) => formatHighlight(market, "confidence"));
 
-  const gainingMomentum = markets
+  const gainingMomentum = dataset
     .filter((market) => market.change24h > 0)
     .sort((a, b) => b.change24h - a.change24h)
     .slice(0, 6)
     .map((market) => formatHighlight(market, "momentum"));
 
-  const steadyBuilders = markets
+  const steadyBuilders = dataset
     .filter((market) => market.volume24h > 0 && market.yesProbability >= 0.45)
     .sort((a, b) => b.volume24h - a.volume24h)
     .slice(0, 6)
     .map((market) => formatHighlight(market, "builder"));
 
-  const liquidityLeaders = markets
+  const liquidityLeaders = dataset
     .filter((market) => market.liquidity > 0)
     .sort((a, b) => b.liquidity - a.liquidity)
     .slice(0, 6);
@@ -248,12 +253,12 @@ export function buildDashboardInsights(rawMarkets: RawPolymarketMarket[]): Dashb
   const twoWeeksAgo = new Date();
   twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
-  const freshOpportunities = markets
+  const freshOpportunities = dataset
     .filter((market) => market.createdAt && market.createdAt > twoWeeksAgo)
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
     .slice(0, 6);
 
-  const upwardWatchlist = markets
+  const upwardWatchlist = dataset
     .filter((market) => market.change24h > 0 || market.change7d > 0)
     .sort((a, b) => b.change7d - a.change7d)
     .slice(0, 6);
@@ -261,6 +266,10 @@ export function buildDashboardInsights(rawMarkets: RawPolymarketMarket[]): Dashb
   return {
     fetchedAt: new Date(),
     totalMarkets,
+    totalFetched,
+    accessibleMarketCount,
+    restrictedMarketCount,
+    usedRestrictedFallback: accessibleMarketCount === 0 && restrictedMarketCount > 0,
     positiveMarketShare: totalMarkets ? positiveMarkets.length / totalMarkets : 0,
     averageYesProbability,
     totalVolume24h,
@@ -270,8 +279,8 @@ export function buildDashboardInsights(rawMarkets: RawPolymarketMarket[]): Dashb
       gainingMomentum,
       steadyBuilders,
     },
-    categoryInsights: aggregateCategories(markets),
-    encouragingSignals: buildEncouragingSignals(markets),
+    categoryInsights: aggregateCategories(dataset),
+    encouragingSignals: buildEncouragingSignals(dataset),
     curated: {
       liquidityLeaders,
       freshOpportunities,

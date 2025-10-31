@@ -49,6 +49,7 @@ function InsightHighlight({ highlight }: { highlight: MarketHighlight }) {
   const probability = probabilityFormatter.format(market.yesProbability || 0);
   const change = market.change24h;
   const changeLabel = change > 0 ? `+${change.toFixed(2)}` : `${change.toFixed(2)}`;
+  const isRestricted = market.restricted;
 
   return (
     <div className="flex h-full flex-col justify-between rounded-2xl border border-slate-700/30 bg-slate-900/70 p-5 shadow-lg shadow-emerald-950/30">
@@ -56,6 +57,11 @@ function InsightHighlight({ highlight }: { highlight: MarketHighlight }) {
         <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300/80">
           {headline}
         </p>
+        {isRestricted ? (
+          <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-amber-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-amber-200">
+            Restricted
+          </span>
+        ) : null}
         <h3 className="mt-3 text-lg font-semibold text-slate-100">{market.question}</h3>
         <p className="mt-2 text-sm text-slate-300/80">{description}</p>
       </div>
@@ -67,14 +73,20 @@ function InsightHighlight({ highlight }: { highlight: MarketHighlight }) {
           24h change {changeLabel}
         </span>
       </div>
-      <Link
-        href={market.url}
-        className="mt-4 inline-flex items-center text-sm font-semibold text-sky-200 transition hover:text-sky-100"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        View on Polymarket ?
-      </Link>
+      {isRestricted ? (
+        <p className="mt-4 text-xs text-amber-200/80">
+          Region-restricted on Polymarket?links require access in an approved location.
+        </p>
+      ) : (
+        <Link
+          href={market.url}
+          className="mt-4 inline-flex items-center text-sm font-semibold text-sky-200 transition hover:text-sky-100"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View on Polymarket ?
+        </Link>
+      )}
     </div>
   );
 }
@@ -233,14 +245,20 @@ function OpportunityColumn({
                   Favourite: {market.topOutcome.label}
                 </span>
               )}
-              <Link
-                href={market.url}
-                className="ml-auto inline-flex items-center gap-1 font-semibold text-sky-200 hover:text-sky-100"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View ?
-              </Link>
+              {market.restricted ? (
+                <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-amber-200/80">
+                  Restricted region
+                </span>
+              ) : (
+                <Link
+                  href={market.url}
+                  className="ml-auto inline-flex items-center gap-1 font-semibold text-sky-200 hover:text-sky-100"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View ?
+                </Link>
+              )}
             </div>
           </div>
         ))}
@@ -366,6 +384,16 @@ export default async function Home() {
             caption="Fresh capital fuelling the conversation in the past day"
           />
         </div>
+        {insights.usedRestrictedFallback ? (
+          <div className="mt-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-100">
+            Most live markets are region-restricted from this location. We?re still surfacing read-only
+            insights, but external links may require Polymarket access in an approved jurisdiction.
+          </div>
+        ) : insights.restrictedMarketCount > 0 ? (
+          <div className="mt-5 rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3 text-xs text-sky-100/80">
+            Showing {insights.accessibleMarketCount} accessible markets; {insights.restrictedMarketCount} additional markets are currently restricted by Polymarket.
+          </div>
+        ) : null}
       </header>
 
       <EncouragingSignals signals={insights.encouragingSignals} />

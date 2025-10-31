@@ -54,6 +54,10 @@ POLYMARKET_API_BASE=https://your-custom-endpoint
 
 Because the experience is read-only, no secret keys are required for the happy-path feature set. If you add privileged or authenticated endpoints later, be sure to proxy them through server-side routes.
 
+### Region restrictions
+
+Polymarket enforces geolocation controls. When the API indicates that a market/event is restricted, the dashboard keeps the data for analytical context but disables outbound links and highlights the limitation. If every fetched market is restricted you will still see the summaries, accompanied by a warning banner.
+
 ---
 
 ## How the insights are computed
