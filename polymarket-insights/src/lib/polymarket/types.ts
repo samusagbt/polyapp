@@ -4,6 +4,7 @@ export interface RawPolymarketMarket {
   slug: string;
   description?: string | null;
   category?: string | null;
+  restricted?: boolean;
   outcomes?: string[] | string | null;
   outcomePrices?: number[] | string | null;
   lastTradePrice?: number | string | null;
@@ -22,6 +23,13 @@ export interface RawPolymarketMarket {
   oneWeekPriceChange?: number | string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  events?: Array<{
+    id?: string;
+    slug: string;
+    title?: string | null;
+    restricted?: boolean;
+    category?: string | null;
+  }> | null;
   [key: string]: unknown;
 }
 
@@ -36,6 +44,10 @@ export interface PolymarketMarket {
   slug: string;
   description: string;
   category: string;
+  eventSlug?: string;
+  eventTitle?: string;
+  url: string;
+  restricted: boolean;
   startDate?: Date;
   endDate?: Date;
   liquidity: number;
@@ -51,6 +63,7 @@ export interface PolymarketMarket {
   change1h: number;
   change24h: number;
   change7d: number;
+  createdAt?: Date;
   updatedAt?: Date;
 }
 
@@ -82,4 +95,9 @@ export interface DashboardInsights {
   };
   categoryInsights: CategoryInsight[];
   encouragingSignals: string[];
+  curated: {
+    liquidityLeaders: PolymarketMarket[];
+    freshOpportunities: PolymarketMarket[];
+    upwardWatchlist: PolymarketMarket[];
+  };
 }

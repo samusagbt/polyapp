@@ -60,9 +60,13 @@ Because the experience is read-only, no secret keys are required for the happy-p
 
 - **fetchMarkets** pulls the latest active, binary markets (up to 300) and normalises numeric fields.
 - **buildDashboardInsights** classifies markets into a set of positive stories:
-  - markets with ?65% YES conviction ? "High-confidence outlooks"
+  - markets with >=65% YES conviction ? "High-confidence outlooks"
   - markets with positive 24h probability delta ? "Momentum building"
-  - markets with healthy liquidity and ?45% YES probability ? "Steady community builders"
+  - markets with healthy liquidity and >=45% YES probability ? "Steady community builders"
+- Curated extras feed the on-page *Opportunity Board*:
+  - deepest liquidity pools for confident sizing
+  - newly listed markets (<=14 days old) already trending positive
+  - an upward watchlist based on 7-day (or fallback 24h) probability lifts
 - Category summaries aggregate 24h volume, positivity ratios, and average YES conviction to provide a friendly sector view.
 
 The storytelling copy emphasises constructive signals to keep the tone optimistic and beginner-friendly.

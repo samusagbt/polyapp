@@ -2,7 +2,11 @@ import Link from "next/link";
 
 import { fetchMarkets } from "@/lib/polymarket/client";
 import { buildDashboardInsights } from "@/lib/polymarket/analytics";
-import type { DashboardInsights, MarketHighlight } from "@/lib/polymarket/types";
+import type {
+  DashboardInsights,
+  MarketHighlight,
+  PolymarketMarket,
+} from "@/lib/polymarket/types";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -64,7 +68,7 @@ function InsightHighlight({ highlight }: { highlight: MarketHighlight }) {
         </span>
       </div>
       <Link
-        href={`https://polymarket.com/event/${market.slug}`}
+        href={market.url}
         className="mt-4 inline-flex items-center text-sm font-semibold text-sky-200 transition hover:text-sky-100"
         target="_blank"
       >
@@ -117,9 +121,7 @@ function CategoryGrid({ insights }: { insights: DashboardInsights["categoryInsig
             </p>
             <div className="mt-3 space-y-1 text-xs text-slate-300/70">
               <p>
-                {category.totalMarkets} active markets ?
-                {" "}
-                {currencyFormatter.format(category.totalVolume24h)} 24h flow
+                {category.totalMarkets} active markets ? {currencyFormatter.format(category.totalVolume24h)} 24h flow
               </p>
               <p>
                 Avg confidence {probabilityFormatter.format(category.avgYesProbability)}
@@ -158,10 +160,137 @@ function HighlightsSection({
   );
 }
 
+function formatRelativeDate(date?: Date) {
+  if (!date) return "Recently listed";
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "1 day ago";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks === 1) return "1 week ago";
+  return `${diffWeeks} weeks ago`;
+}
+
+function formatChangePercent(value: number) {
+  if (value === 0) return "No change";
+  const formatted = percentFormatter.format(Math.abs(value));
+  return value > 0 ? `+${formatted}` : `-${formatted}`;
+}
+
 function formatNumber(value: number) {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
   return value.toFixed(0);
+}
+
+function OpportunityColumn({
+  title,
+  subtitle,
+  markets,
+  metricLabel,
+  metricValue,
+}: {
+  title: string;
+  subtitle: string;
+  markets: PolymarketMarket[];
+  metricLabel: (market: PolymarketMarket) => string;
+  metricValue: (market: PolymarketMarket) => string;
+}) {
+  if (markets.length === 0) return null;
+
+  return (
+    <div className="space-y-4 rounded-3xl border border-slate-700/30 bg-slate-900/60 p-5 shadow-xl shadow-sky-950/30">
+      <div>
+        <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
+        <p className="text-sm text-slate-300/80">{subtitle}</p>
+      </div>
+      <div className="space-y-4">
+        {markets.slice(0, 5).map((market) => (
+          <div
+            key={market.id}
+            className="rounded-2xl border border-slate-700/30 bg-slate-950/40 p-4 transition hover:border-sky-400/40 hover:shadow-lg hover:shadow-sky-900/30"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-100">{market.question}</p>
+                <p className="mt-1 text-xs uppercase tracking-wide text-sky-200/70">
+                  {metricLabel(market)}
+                </p>
+              </div>
+              <span className="flex-none rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-200">
+                {probabilityFormatter.format(market.yesProbability)} yes
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-300/80">
+              <span className="rounded-full bg-slate-800/60 px-3 py-1 font-semibold text-slate-100">
+                {metricValue(market)}
+              </span>
+              {market.topOutcome && (
+                <span className="rounded-full bg-sky-500/15 px-3 py-1 text-sky-200">
+                  Favourite: {market.topOutcome.label}
+                </span>
+              )}
+              <Link
+                href={market.url}
+                className="ml-auto inline-flex items-center gap-1 font-semibold text-sky-200 hover:text-sky-100"
+                target="_blank"
+              >
+                View ?
+              </Link>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OpportunityBoard({ curated }: { curated: DashboardInsights["curated"] }) {
+  const hasContent =
+    curated.liquidityLeaders.length > 0 ||
+    curated.freshOpportunities.length > 0 ||
+    curated.upwardWatchlist.length > 0;
+
+  if (!hasContent) return null;
+
+  return (
+    <section className="space-y-6 rounded-3xl border border-slate-700/30 bg-slate-900/70 p-6 shadow-2xl shadow-sky-950/30">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-100">Opportunity Board</h2>
+          <p className="text-sm text-slate-300/80">
+            Fresh leads to explore?ranging from deep liquidity pools to newly listed ideas showing
+            constructive momentum.
+          </p>
+        </div>
+      </div>
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <OpportunityColumn
+          title="Liquidity leaders"
+          subtitle="Strong backing and tight markets ready for confident positioning."
+          markets={curated.liquidityLeaders}
+          metricLabel={() => "Liquidity depth"}
+          metricValue={(market) => currencyFormatter.format(market.liquidity)}
+        />
+        <OpportunityColumn
+          title="Fresh opportunities"
+          subtitle="Newly listed markets already attracting positive attention."
+          markets={curated.freshOpportunities}
+          metricLabel={() => "Listed"}
+          metricValue={(market) => formatRelativeDate(market.createdAt)}
+        />
+        <OpportunityColumn
+          title="Upward watchlist"
+          subtitle="Constructive probability moves worth keeping on your radar."
+          markets={curated.upwardWatchlist}
+          metricLabel={() => "7 day shift"}
+          metricValue={(market) => formatChangePercent(market.change7d || market.change24h)}
+        />
+      </div>
+    </section>
+  );
 }
 
 export default async function Home() {
@@ -258,6 +387,8 @@ export default async function Home() {
       />
 
       <CategoryGrid insights={insights.categoryInsights} />
+
+      <OpportunityBoard curated={insights.curated} />
 
       <footer className="my-8 rounded-3xl border border-slate-700/30 bg-slate-900/70 p-6 text-sm text-slate-300/80">
         <p>

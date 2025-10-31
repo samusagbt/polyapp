@@ -51,13 +51,24 @@ function toMarket(raw: RawPolymarketMarket): PolymarketMarket {
   const outcomes = raw.outcomes ?? [];
   const prices = raw.outcomePrices ?? [];
   const { yesOutcome, yesProbability } = pickYesOutcome(outcomes, prices);
+  const primaryEvent = raw.events?.[0] ?? null;
+  const eventSlug = primaryEvent?.slug ?? undefined;
+  const category = raw.category ?? primaryEvent?.category ?? "Uncategorized";
+  const restricted = Boolean(raw.restricted) || Boolean(primaryEvent?.restricted);
+  const url = eventSlug
+    ? `https://polymarket.com/event/${eventSlug}/${raw.slug}`
+    : `https://polymarket.com/market/${raw.slug}`;
 
   return {
     id: raw.id,
     question: raw.question,
     slug: raw.slug,
     description: raw.description ?? "",
-    category: raw.category ?? "Uncategorized",
+    category,
+    eventSlug,
+    eventTitle: primaryEvent?.title ?? undefined,
+    url,
+    restricted,
     startDate: toDate(raw.startDate ?? undefined),
     endDate: toDate(raw.endDate ?? undefined),
     liquidity: Number(raw.liquidityNum ?? raw.liquidity ?? 0),
@@ -77,6 +88,7 @@ function toMarket(raw: RawPolymarketMarket): PolymarketMarket {
     change1h: Number(raw.oneHourPriceChange ?? 0),
     change24h: Number(raw.oneDayPriceChange ?? 0),
     change7d: Number(raw.oneWeekPriceChange ?? 0),
+    createdAt: toDate(raw.createdAt ?? undefined),
     updatedAt: toDate(raw.updatedAt ?? undefined),
   };
 }
@@ -180,7 +192,9 @@ function buildEncouragingSignals(markets: PolymarketMarket[]): string[] {
 }
 
 export function buildDashboardInsights(rawMarkets: RawPolymarketMarket[]): DashboardInsights {
-  const markets = rawMarkets.map(toMarket).filter((market) => market.outcomes.length >= 1);
+  const markets = rawMarkets
+    .map(toMarket)
+    .filter((market) => market.outcomes.length >= 1 && !market.restricted);
 
   const totalMarkets = markets.length;
   const positiveMarkets = markets.filter((market) => market.yesProbability >= 0.5);
@@ -209,6 +223,24 @@ export function buildDashboardInsights(rawMarkets: RawPolymarketMarket[]): Dashb
     .slice(0, 6)
     .map((market) => formatHighlight(market, "builder"));
 
+  const liquidityLeaders = markets
+    .filter((market) => market.liquidity > 0)
+    .sort((a, b) => b.liquidity - a.liquidity)
+    .slice(0, 6);
+
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+  const freshOpportunities = markets
+    .filter((market) => market.createdAt && market.createdAt > twoWeeksAgo)
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
+    .slice(0, 6);
+
+  const upwardWatchlist = markets
+    .filter((market) => market.change24h > 0 || market.change7d > 0)
+    .sort((a, b) => b.change7d - a.change7d)
+    .slice(0, 6);
+
   return {
     fetchedAt: new Date(),
     totalMarkets,
@@ -223,5 +255,10 @@ export function buildDashboardInsights(rawMarkets: RawPolymarketMarket[]): Dashb
     },
     categoryInsights: aggregateCategories(markets),
     encouragingSignals: buildEncouragingSignals(markets),
+    curated: {
+      liquidityLeaders,
+      freshOpportunities,
+      upwardWatchlist,
+    },
   };
 }
