@@ -71,6 +71,7 @@ function InsightHighlight({ highlight }: { highlight: MarketHighlight }) {
         href={market.url}
         className="mt-4 inline-flex items-center text-sm font-semibold text-sky-200 transition hover:text-sky-100"
         target="_blank"
+        rel="noopener noreferrer"
       >
         View on Polymarket ?
       </Link>
@@ -236,6 +237,7 @@ function OpportunityColumn({
                 href={market.url}
                 className="ml-auto inline-flex items-center gap-1 font-semibold text-sky-200 hover:text-sky-100"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 View ?
               </Link>

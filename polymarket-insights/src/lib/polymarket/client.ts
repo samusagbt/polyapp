@@ -136,8 +136,7 @@ export async function fetchMarkets(
 
   const response = await fetchJson<RawPolymarketMarket[]>(url, {
     ...init,
-    // Cache on the server for 2 minutes to keep data fresh but avoid hammering the API.
-    next: { revalidate: 120, ...(init?.next ?? {}) },
+    cache: "no-store",
   });
 
   return response.map(normalizeMarket);

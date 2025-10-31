@@ -45,19 +45,36 @@ function deriveTopOutcome(outcomes: string[], prices: number[]): MarketOutcome |
   }, null);
 }
 
+function encodePathSegment(segment: string | undefined | null): string | undefined {
+  if (!segment) return undefined;
+  return segment
+    .split("/")
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join("/");
+}
+
 function toMarket(raw: RawPolymarketMarket): PolymarketMarket {
   const toDate = (value?: string | null) =>
     value ? new Date(value) : undefined;
   const outcomes = raw.outcomes ?? [];
   const prices = raw.outcomePrices ?? [];
   const { yesOutcome, yesProbability } = pickYesOutcome(outcomes, prices);
-  const primaryEvent = raw.events?.[0] ?? null;
+  const eventRestricted = Array.isArray(raw.events)
+    ? raw.events.some((event) => Boolean(event?.restricted))
+    : false;
+  const primaryAvailableEvent = Array.isArray(raw.events)
+    ? raw.events.find((event) => !event?.restricted)
+    : undefined;
+  const primaryEvent = primaryAvailableEvent ?? raw.events?.[0] ?? null;
   const eventSlug = primaryEvent?.slug ?? undefined;
   const category = raw.category ?? primaryEvent?.category ?? "Uncategorized";
-  const restricted = Boolean(raw.restricted) || Boolean(primaryEvent?.restricted);
-  const url = eventSlug
-    ? `https://polymarket.com/event/${eventSlug}/${raw.slug}`
-    : `https://polymarket.com/market/${raw.slug}`;
+  const restricted = Boolean(raw.restricted) || eventRestricted;
+  const encodedEventSlug = encodePathSegment(eventSlug);
+  const encodedMarketSlug = encodePathSegment(raw.slug) ?? "";
+  const url = encodedEventSlug
+    ? `https://polymarket.com/event/${encodedEventSlug}`
+    : `https://polymarket.com/market/${encodedMarketSlug}`;
 
   return {
     id: raw.id,
