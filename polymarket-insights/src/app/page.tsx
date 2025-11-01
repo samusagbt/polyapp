@@ -313,11 +313,26 @@ function OpportunityBoard({ curated }: { curated: DashboardInsights["curated"] }
   );
 }
 
+function EmptyState({ insights }: { insights: DashboardInsights }) {
+  return (
+    <section className="rounded-3xl border border-slate-700/30 bg-slate-900/70 p-10 text-center shadow-2xl shadow-sky-950/30">
+      <h2 className="text-2xl font-semibold text-slate-100">No public markets were available</h2>
+      <p className="mt-3 text-sm text-slate-300/80">
+        Polymarket returned {insights.totalFetched} markets, but none are publicly accessible from this
+        location right now. The summary cards above reflect the latest data we could collect.
+      </p>
+      <p className="mt-4 text-xs text-slate-400/80">
+        Tip: try again later, or connect through an approved jurisdiction to browse full market pages.
+      </p>
+    </section>
+  );
+}
+
 export default async function Home() {
   let insights: DashboardInsights | null = null;
 
   try {
-    const markets = await fetchMarkets({ limit: 300, active: true, closed: false });
+    const markets = await fetchMarkets({ limit: 200, active: true, closed: false });
     insights = buildDashboardInsights(markets);
   } catch (error) {
     console.error("Failed to load Polymarket data", error);
@@ -336,6 +351,8 @@ export default async function Home() {
       </main>
     );
   }
+
+  const isEmpty = insights.totalMarkets === 0;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-10 px-6 py-12 sm:px-10 lg:px-16">
@@ -396,29 +413,35 @@ export default async function Home() {
         ) : null}
       </header>
 
-      <EncouragingSignals signals={insights.encouragingSignals} />
+      {isEmpty ? (
+        <EmptyState insights={insights} />
+      ) : (
+        <>
+          <EncouragingSignals signals={insights.encouragingSignals} />
 
-      <HighlightsSection
-        title="High-confidence outlooks"
-        subtitle="Clear agreement from forecasters delivering uplifting clarity."
-        highlights={insights.highlights.highConfidence}
-      />
+          <HighlightsSection
+            title="High-confidence outlooks"
+            subtitle="Clear agreement from forecasters delivering uplifting clarity."
+            highlights={insights.highlights.highConfidence}
+          />
 
-      <HighlightsSection
-        title="Momentum building"
-        subtitle="Markets experiencing encouraging positive shifts in the last 24 hours."
-        highlights={insights.highlights.gainingMomentum}
-      />
+          <HighlightsSection
+            title="Momentum building"
+            subtitle="Markets experiencing encouraging positive shifts in the last 24 hours."
+            highlights={insights.highlights.gainingMomentum}
+          />
 
-      <HighlightsSection
-        title="Steady community builders"
-        subtitle="Healthy liquidity and constructive sentiment showing sustained interest."
-        highlights={insights.highlights.steadyBuilders}
-      />
+          <HighlightsSection
+            title="Steady community builders"
+            subtitle="Healthy liquidity and constructive sentiment showing sustained interest."
+            highlights={insights.highlights.steadyBuilders}
+          />
 
-      <CategoryGrid insights={insights.categoryInsights} />
+          <CategoryGrid insights={insights.categoryInsights} />
 
-      <OpportunityBoard curated={insights.curated} />
+          <OpportunityBoard curated={insights.curated} />
+        </>
+      )}
 
       <footer className="my-8 rounded-3xl border border-slate-700/30 bg-slate-900/70 p-6 text-sm text-slate-300/80">
         <p>
