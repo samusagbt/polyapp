@@ -186,12 +186,22 @@ function buildEncouragingSignals(markets: PolymarketMarket[]): string[] {
     .filter((m) => m.change24h > 0)
     .sort((a, b) => b.change24h - a.change24h);
   const liquid = markets.filter((m) => m.liquidity >= 5000);
+  const topConfidence = [...markets].sort(
+    (a, b) => b.yesProbability - a.yesProbability,
+  )[0];
 
   const signals: string[] = [];
 
-  signals.push(
-    `${Math.round((confident.length / total) * 100)}% of tracked markets show a clear positive consensus today.`,
-  );
+  if (confident.length > 0) {
+    signals.push(
+      `${Math.round((confident.length / total) * 100)}% of tracked markets show a clear positive consensus today.`,
+    );
+  } else if (topConfidence) {
+    const support = Math.round(topConfidence.yesProbability * 1000) / 10;
+    signals.push(
+      `Strongest support right now: ?${topConfidence.question}? with ${support}% yes backing.`,
+    );
+  }
 
   if (trending.length > 0) {
     signals.push(
