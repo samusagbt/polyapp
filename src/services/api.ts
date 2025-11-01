@@ -26,9 +26,10 @@ export const polymarketAPI = {
   async getMarkets(limit = 100, offset = 0): Promise<Market[]> {
     try {
       const response = await gammaClient.get('/markets', {
-        params: { limit, offset, closed: false, active: true },
+        params: { limit, offset },
       });
-      return response.data;
+      // Return all markets, filter on client side if needed
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Error fetching markets from Gamma API:', error);
       return [];
@@ -48,9 +49,9 @@ export const polymarketAPI = {
   async searchMarkets(query: string): Promise<Market[]> {
     try {
       const response = await gammaClient.get('/markets', {
-        params: { search: query, closed: false },
+        params: { search: query },
       });
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Error searching markets:', error);
       return [];
@@ -99,7 +100,11 @@ export const polymarketAPI = {
   async getActiveMarkets(): Promise<Market[]> {
     try {
       const markets = await this.getMarkets(200);
-      return markets.filter(m => m.active && !m.closed && !m.archived);
+      // Filter for truly active markets
+      return markets.filter(m => {
+        // Include if active OR has recent volume
+        return (m.active && !m.archived) || m.volume24hr > 0;
+      });
     } catch (error) {
       console.error('Error fetching active markets:', error);
       return [];

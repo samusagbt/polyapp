@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, HelpCircle, TrendingUp, Filter, Search, DollarSign, Clock } from 'lucide-react';
+import { X, HelpCircle, TrendingUp, Filter, Search, DollarSign } from 'lucide-react';
 
 interface InfoModalProps {
   isOpen: boolean;

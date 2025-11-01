@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Header } from './components/Header';
 import { StatsCard } from './components/StatsCard';
@@ -8,6 +8,7 @@ import { ErrorMessage } from './components/ErrorMessage';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { InfoModal } from './components/InfoModal';
 import { WelcomeBanner } from './components/WelcomeBanner';
+import { DebugInfo } from './components/DebugInfo';
 import { useMarkets } from './hooks/useMarkets';
 import { sortMarkets, filterMarkets, calculateMarketStats } from './utils/helpers';
 import { SortOption, ViewMode } from './types';
@@ -161,6 +162,15 @@ function Dashboard() {
             />
           </>
         )}
+
+        {/* Debug Info (development only) */}
+        <DebugInfo 
+          markets={markets}
+          filteredMarkets={filteredMarkets}
+          category={category}
+          isLoading={isLoading}
+          error={error}
+        />
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-gray-200">

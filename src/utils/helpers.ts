@@ -79,33 +79,38 @@ export const filterMarkets = (
   category?: string,
   minVolume?: number
 ): Market[] => {
-  let filtered = markets;
+  let filtered = [...markets];
   
-  if (category && category !== 'all') {
-    filtered = filtered.filter(m => 
-      m.category.toLowerCase().includes(category.toLowerCase())
-    );
+  // Only filter by category if specified and not 'all'
+  if (category && category !== 'all' && category !== '') {
+    filtered = filtered.filter(m => {
+      const marketCategory = (m.category || '').toLowerCase();
+      const searchCategory = category.toLowerCase();
+      return marketCategory.includes(searchCategory) || searchCategory.includes(marketCategory);
+    });
   }
   
-  if (minVolume) {
-    filtered = filtered.filter(m => m.volumeNum >= minVolume);
+  // Only filter by volume if specified
+  if (minVolume && minVolume > 0) {
+    filtered = filtered.filter(m => (m.volumeNum || 0) >= minVolume);
   }
   
   return filtered;
 };
 
 export const calculateMarketStats = (markets: Market[]) => {
-  const totalVolume = markets.reduce((sum, m) => sum + m.volumeNum, 0);
-  const activeMarkets = markets.filter(m => m.active && !m.closed).length;
+  const totalVolume = markets.reduce((sum, m) => sum + (m.volumeNum || 0), 0);
+  const activeMarkets = markets.filter(m => m.active && !m.closed && !m.archived).length;
   
   const categoryCounts: Record<string, { count: number; volume: number }> = {};
   
   markets.forEach(market => {
-    if (!categoryCounts[market.category]) {
-      categoryCounts[market.category] = { count: 0, volume: 0 };
+    const category = market.category || 'Uncategorized';
+    if (!categoryCounts[category]) {
+      categoryCounts[category] = { count: 0, volume: 0 };
     }
-    categoryCounts[market.category].count++;
-    categoryCounts[market.category].volume += market.volumeNum;
+    categoryCounts[category].count++;
+    categoryCounts[category].volume += (market.volumeNum || 0);
   });
   
   const topCategories = Object.entries(categoryCounts)
@@ -120,7 +125,7 @@ export const calculateMarketStats = (markets: Market[]) => {
   return {
     totalVolume,
     totalMarkets: markets.length,
-    activeMarkets,
+    activeMarkets: activeMarkets > 0 ? activeMarkets : markets.length, // Show total if no active
     topCategories,
   };
 };
