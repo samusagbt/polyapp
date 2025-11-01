@@ -1,11 +1,12 @@
 import React from 'react';
-import { TrendingUp, Search, Menu } from 'lucide-react';
+import { TrendingUp, Search, Menu, HelpCircle } from 'lucide-react';
 
 interface HeaderProps {
   onSearch: (query: string) => void;
+  onOpenInfo: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onSearch }) => {
+export const Header: React.FC<HeaderProps> = ({ onSearch, onOpenInfo }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -44,9 +45,18 @@ export const Header: React.FC<HeaderProps> = ({ onSearch }) => {
             </form>
           </div>
 
-          <button className="md:hidden p-2 rounded-lg hover:bg-gray-100">
-            <Menu className="h-6 w-6 text-gray-600" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={onOpenInfo}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Help & Information"
+            >
+              <HelpCircle className="h-6 w-6 text-gray-600" />
+            </button>
+            <button className="md:hidden p-2 rounded-lg hover:bg-gray-100">
+              <Menu className="h-6 w-6 text-gray-600" />
+            </button>
+          </div>
         </div>
 
         {/* Mobile search */}

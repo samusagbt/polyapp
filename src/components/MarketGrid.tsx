@@ -2,17 +2,22 @@ import React from 'react';
 import { Market } from '../types';
 import { MarketCard } from './MarketCard';
 import { LoadingCard } from './LoadingSpinner';
+import { EmptyState } from './EmptyState';
 
 interface MarketGridProps {
   markets: Market[];
   loading?: boolean;
   viewMode?: 'grid' | 'list';
+  searchQuery?: string;
+  onClearFilters?: () => void;
 }
 
 export const MarketGrid: React.FC<MarketGridProps> = ({ 
   markets, 
   loading = false,
-  viewMode = 'grid'
+  viewMode = 'grid',
+  searchQuery,
+  onClearFilters,
 }) => {
   if (loading) {
     return (
@@ -29,14 +34,7 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
   }
 
   if (markets.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 text-lg">No markets found</p>
-        <p className="text-gray-400 text-sm mt-2">
-          Try adjusting your filters or search query
-        </p>
-      </div>
-    );
+    return <EmptyState type="no-results" searchQuery={searchQuery} onClearFilters={onClearFilters} />;
   }
 
   return (

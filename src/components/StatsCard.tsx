@@ -7,6 +7,7 @@ interface StatsCardProps {
   icon: LucideIcon;
   change?: number;
   trend?: 'up' | 'down';
+  description?: string;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
@@ -15,12 +16,16 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   icon: Icon,
   change,
   trend,
+  description,
 }) => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600">{title}</p>
+          {description && (
+            <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+          )}
           <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
           {change !== undefined && (
             <p className={`mt-2 text-sm ${

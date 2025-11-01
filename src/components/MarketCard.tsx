@@ -25,8 +25,9 @@ export const MarketCard: React.FC<MarketCardProps> = ({ market, onClick }) => {
 
   return (
     <div 
-      className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+      className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-lg transition-all cursor-pointer overflow-hidden group"
       onClick={onClick}
+      title="Click to view this market on Polymarket"
     >
       {market.image && (
         <div className="h-40 overflow-hidden bg-gray-100">
@@ -84,18 +85,25 @@ export const MarketCard: React.FC<MarketCardProps> = ({ market, onClick }) => {
         <div className="flex items-center justify-between pt-3 border-t border-gray-200">
           <div className="flex items-center space-x-1 text-gray-600">
             <DollarSign className="h-4 w-4" />
-            <span className="text-sm font-medium">
+            <span className="text-sm font-medium" title="Total trading volume">
               {formatVolume(market.volumeNum)}
             </span>
           </div>
           {market.volume24hr > 0 && (
             <div className="flex items-center space-x-1 text-green-600">
               <TrendingUp className="h-4 w-4" />
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium" title="24-hour trading volume">
                 {formatVolume(market.volume24hr)} 24h
               </span>
             </div>
           )}
+        </div>
+
+        {/* Hover instruction */}
+        <div className="mt-3 pt-3 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+          <p className="text-xs text-primary-600 text-center font-medium">
+            Click to trade on Polymarket ?
+          </p>
         </div>
       </div>
     </div>

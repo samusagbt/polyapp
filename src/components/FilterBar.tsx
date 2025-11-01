@@ -38,6 +38,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 }) => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      {/* Info bar */}
+      <div className="mb-3 pb-3 border-b border-gray-100">
+        <p className="text-sm text-gray-600">
+          <span className="font-semibold">Tip:</span> Click any category to filter markets, or use the search bar to find specific events
+        </p>
+      </div>
+      
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         {/* Category Filter */}
         <div className="flex items-center space-x-2 flex-wrap gap-2">
