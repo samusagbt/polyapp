@@ -1,10 +1,12 @@
 import axios from 'axios';
 import { Market, CLOBMarket } from '../types';
 
-// Use proxy in development to avoid CORS issues
-const isDevelopment = import.meta.env.DEV;
-const GAMMA_API = isDevelopment ? '/api/gamma' : 'https://gamma-api.polymarket.com';
-const CLOB_API = isDevelopment ? '/api/clob' : 'https://clob.polymarket.com';
+// ALWAYS use proxy to avoid CORS issues in Codespaces
+// The proxy is configured in vite.config.ts
+const GAMMA_API = '/api/gamma';
+const CLOB_API = '/api/clob';
+
+console.log('?? API Configuration:', { GAMMA_API, CLOB_API });
 
 // Create axios instances with proper configuration
 const gammaClient = axios.create({
