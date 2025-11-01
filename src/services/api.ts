@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { Market, CLOBMarket } from '../types';
 
-const GAMMA_API = 'https://gamma-api.polymarket.com';
-const CLOB_API = 'https://clob.polymarket.com';
+// Use proxy in development to avoid CORS issues
+const isDevelopment = import.meta.env.DEV;
+const GAMMA_API = isDevelopment ? '/api/gamma' : 'https://gamma-api.polymarket.com';
+const CLOB_API = isDevelopment ? '/api/clob' : 'https://clob.polymarket.com';
 
 // Create axios instances with proper configuration
 const gammaClient = axios.create({
