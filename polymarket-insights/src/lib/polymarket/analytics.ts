@@ -193,13 +193,14 @@ function buildEncouragingSignals(markets: PolymarketMarket[]): string[] {
   const signals: string[] = [];
 
   if (confident.length > 0) {
+    const consensusShare = ((confident.length / total) * 100).toFixed(1);
     signals.push(
-      `${Math.round((confident.length / total) * 100)}% of tracked markets show a clear positive consensus today.`,
+      `${consensusShare}% of tracked markets show a clear positive consensus today.`,
     );
   } else if (topConfidence) {
     const support = Math.round(topConfidence.yesProbability * 1000) / 10;
     signals.push(
-      `Strongest support right now: ?${topConfidence.question}? with ${support}% yes backing.`,
+      `Strongest support right now: "${topConfidence.question}" with ${support}% yes backing.`,
     );
   }
 
